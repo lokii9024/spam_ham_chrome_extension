@@ -4,7 +4,7 @@
  * Parses DOM, sends text to FastAPI, highlights spam
  */
 
-const API_URL = 'https://spamurai-ai.onrender.com/predict'; // ← Change to your FastAPI endpoint
+const API_URL = process.env.FAST_API_URL; // ← Change to your FastAPI endpoint
 const SCAN_INTERVAL_MS = 2000;
 const CONFIDENCE_THRESHOLD = 0.6;
 
