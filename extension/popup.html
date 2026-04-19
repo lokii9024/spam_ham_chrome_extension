@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SpamShield</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0d0f14;
+      --surface: #151820;
+      --surface2: #1c2030;
+      --border: rgba(255,255,255,0.07);
+      --accent: #ff4757;
+      --accent-soft: rgba(255, 71, 87, 0.12);
+      --green: #2ed573;
+      --green-soft: rgba(46, 213, 115, 0.12);
+      --text: #e8eaf0;
+      --muted: #6b7280;
+      --mono: 'Space Mono', monospace;
+      --sans: 'DM Sans', sans-serif;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      width: 340px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      overflow: hidden;
+    }
+
+    /* ── Header ── */
+    .header {
+      padding: 18px 20px 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--surface);
+      position: relative;
+      overflow: hidden;
+    }
+    .header::before {
+      content: '';
+      position: absolute;
+      top: -30px; right: -30px;
+      width: 100px; height: 100px;
+      background: radial-gradient(circle, rgba(255,71,87,0.15) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .logo {
+      width: 32px; height: 32px;
+      background: var(--accent);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+      box-shadow: 0 0 16px rgba(255,71,87,0.4);
+      flex-shrink: 0;
+    }
+    .brand-text h1 {
+      font-family: var(--mono);
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      line-height: 1;
+    }
+    .brand-text span {
+      font-size: 10px;
+      color: var(--muted);
+      font-weight: 300;
+      letter-spacing: 0.05em;
+    }
+
+    /* Toggle */
+    .toggle-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .toggle-label {
+      font-size: 11px;
+      color: var(--muted);
+      font-family: var(--mono);
+    }
+    .toggle {
+      position: relative;
+      width: 40px; height: 22px;
+      cursor: pointer;
+    }
+    .toggle input { display: none; }
+    .slider {
+      position: absolute; inset: 0;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      transition: 0.25s ease;
+    }
+    .slider::after {
+      content: '';
+      position: absolute;
+      top: 3px; left: 3px;
+      width: 14px; height: 14px;
+      background: var(--muted);
+      border-radius: 50%;
+      transition: 0.25s ease;
+    }
+    .toggle input:checked + .slider {
+      background: var(--green-soft);
+      border-color: var(--green);
+    }
+    .toggle input:checked + .slider::after {
+      transform: translateX(18px);
+      background: var(--green);
+      box-shadow: 0 0 8px rgba(46,213,115,0.6);
+    }
+
+    /* Status pill */
+    .status-bar {
+      padding: 8px 20px;
+      background: var(--surface2);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+    }
+    .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--muted);
+      transition: 0.3s;
+    }
+    .dot.active { background: var(--green); box-shadow: 0 0 6px rgba(46,213,115,0.7); }
+    .dot.inactive { background: var(--muted); }
+    #status-text { font-family: var(--mono); font-size: 10px; }
+
+    /* Stats grid */
+    .stats {
+      padding: 16px 20px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 10px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+    .stat-card:hover { border-color: rgba(255,255,255,0.14); }
+    .stat-card.spam-card { border-color: rgba(255,71,87,0.25); }
+    .stat-card.spam-card::before {
+      content: '';
+      position: absolute;
+      bottom: -10px; right: -10px;
+      width: 40px; height: 40px;
+      background: radial-gradient(circle, rgba(255,71,87,0.2) 0%, transparent 70%);
+    }
+
+    .stat-value {
+      font-family: var(--mono);
+      font-size: 22px;
+      font-weight: 700;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .stat-card:nth-child(1) .stat-value { color: var(--text); }
+    .stat-card:nth-child(2) .stat-value { color: var(--accent); }
+    .stat-card:nth-child(3) .stat-value { color: var(--green); }
+
+    .stat-label {
+      font-size: 9px;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-weight: 500;
+    }
+
+    /* Platform breakdown */
+    .section-title {
+      padding: 0 20px 8px;
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      font-family: var(--mono);
+    }
+
+    .platforms {
+      padding: 0 20px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .platform-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .platform-icon {
+      width: 26px; height: 26px;
+      border-radius: 7px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+    .platform-icon.gmail { background: rgba(234,67,53,0.12); }
+    .platform-icon.linkedin { background: rgba(10,102,194,0.12); }
+    .platform-icon.whatsapp { background: rgba(37,211,102,0.12); }
+
+    .platform-info { flex: 1; }
+    .platform-name {
+      font-size: 11px;
+      font-weight: 500;
+      margin-bottom: 3px;
+      color: var(--text);
+    }
+    .progress-bar {
+      height: 3px;
+      background: var(--surface2);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      border-radius: 2px;
+      background: var(--accent);
+      transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .platform-count {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--muted);
+      min-width: 18px;
+      text-align: right;
+    }
+
+    /* Divider */
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 0 20px 14px;
+    }
+
+    /* Recent activity */
+    .recent {
+      padding: 0 20px 14px;
+    }
+    .recent-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      margin-bottom: 5px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      animation: slideIn 0.3s ease;
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .recent-badge {
+      font-size: 9px;
+      font-family: var(--mono);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 700;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .recent-badge.spam { background: var(--accent-soft); color: var(--accent); border: 1px solid rgba(255,71,87,0.3); }
+    .recent-badge.ham { background: var(--green-soft); color: var(--green); border: 1px solid rgba(46,213,115,0.3); }
+    .recent-text {
+      font-size: 11px;
+      color: var(--muted);
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 1.4;
+    }
+    .recent-conf {
+      font-size: 10px;
+      font-family: var(--mono);
+      color: var(--muted);
+      flex-shrink: 0;
+    }
+
+    /* Footer */
+    .footer {
+      padding: 10px 20px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid var(--border);
+    }
+    .footer-btn {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 10px;
+      font-family: var(--mono);
+      padding: 5px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .footer-btn:hover { border-color: rgba(255,255,255,0.2); color: var(--text); }
+
+    .api-indicator {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 9px;
+      color: var(--muted);
+      font-family: var(--mono);
+    }
+    .api-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 5px rgba(46,213,115,0.6);
+    }
+    .api-dot.offline { background: var(--accent); box-shadow: 0 0 5px rgba(255,71,87,0.6); }
+
+    /* Disabled state */
+    body.disabled .stats,
+    body.disabled .platforms,
+    body.disabled .recent,
+    body.disabled .section-title {
+      opacity: 0.35;
+      pointer-events: none;
+    }
+    body.disabled .status-bar .dot { background: var(--muted) !important; box-shadow: none !important; }
+
+    .empty-state {
+      font-size: 11px;
+      color: var(--muted);
+      text-align: center;
+      padding: 10px 0;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="brand">
+      <div class="logo">🛡️</div>
+      <div class="brand-text">
+        <h1>SpamShield</h1>
+        <span>Real-time detection</span>
+      </div>
+    </div>
+    <div class="toggle-wrap">
+      <span class="toggle-label" id="toggle-label">ON</span>
+      <label class="toggle">
+        <input type="checkbox" id="mainToggle" checked>
+        <span class="slider"></span>
+      </label>
+    </div>
+  </div>
+
+  <!-- Status -->
+  <div class="status-bar">
+    <div class="dot active" id="statusDot"></div>
+    <span id="status-text">ACTIVE · MONITORING</span>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat-card">
+      <div class="stat-value" id="stat-scanned">0</div>
+      <div class="stat-label">Scanned</div>
+    </div>
+    <div class="stat-card spam-card">
+      <div class="stat-value" id="stat-spam">0</div>
+      <div class="stat-label">Spam</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="stat-safe">0</div>
+      <div class="stat-label">Safe</div>
+    </div>
+  </div>
+
+  <!-- Platform breakdown -->
+  <div class="divider"></div>
+  <div class="section-title">By Platform</div>
+  <div class="platforms">
+    <div class="platform-row">
+      <div class="platform-icon gmail">📧</div>
+      <div class="platform-info">
+        <div class="platform-name">Gmail</div>
+        <div class="progress-bar"><div class="progress-fill" id="bar-gmail" style="width:0%"></div></div>
+      </div>
+      <div class="platform-count" id="count-gmail">0</div>
+    </div>
+    <div class="platform-row">
+      <div class="platform-icon linkedin">💼</div>
+      <div class="platform-info">
+        <div class="platform-name">LinkedIn</div>
+        <div class="progress-bar"><div class="progress-fill" id="bar-linkedin" style="width:0%"></div></div>
+      </div>
+      <div class="platform-count" id="count-linkedin">0</div>
+    </div>
+    <div class="platform-row">
+      <div class="platform-icon whatsapp">💬</div>
+      <div class="platform-info">
+        <div class="platform-name">WhatsApp</div>
+        <div class="progress-bar"><div class="progress-fill" id="bar-whatsapp" style="width:0%"></div></div>
+      </div>
+      <div class="platform-count" id="count-whatsapp">0</div>
+    </div>
+  </div>
+
+  <!-- Recent detections -->
+  <div class="divider"></div>
+  <div class="section-title">Recent Detections</div>
+  <div class="recent" id="recent-list">
+    <div class="empty-state">No detections yet</div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <button class="footer-btn" id="clearBtn">Clear Stats</button>
+    <div class="api-indicator">
+      <div class="api-dot" id="apiDot"></div>
+      <span id="apiStatus">API Connected</span>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
